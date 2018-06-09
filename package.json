@@ -1,0 +1,23 @@
+{
+    "name": "cd-recent",
+    "version": "0.0.0",
+    "description": "A tool for listing and changing directory to a recently visited directory in a UNIX terminal",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Joshua Thomas Vernon",
+    "license": "MIT",
+    "keywords": [
+        "cd",
+        "recent"
+    ],
+    "dependencies": {
+        "chalk": "^2.4.1",
+        "commander": "^2.15.1",
+        "fs-extra": "^6.0.1"
+    },
+    "bin": {
+        "cd-recent": "index.js"
+    }
+}
