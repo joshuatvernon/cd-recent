@@ -6,6 +6,7 @@ const chalk = require('chalk');
 const expandTilde = require('expand-tilde');
 
 const configFilePath = __dirname + '/config.json';
+const dynamicHistoryLimit = 1000;
 
 let config;
 let limit;
@@ -80,12 +81,12 @@ function loadConfig() {
     } else {
         // config file doesn't exist; save default config file
         config = {
-           historyFilePath: '',
-           defaultLimit: 10,
-           dynamicTracking: false,
-           recentlyVisitedDirectories: []
-       };
-       saveConfig();
+            historyFilePath: '',
+            defaultLimit: 10,
+            dynamicTracking: false,
+            recentlyVisitedDirectories: []
+        };
+        saveConfig();
     }
 }
 
@@ -119,7 +120,7 @@ function loadHistoryFile() {
         historyFileLines.forEach(function (line) {
             if (line.includes('cd ')) {
                 match = line.split('cd ');
-                config.recentlyVisitedDirectories.push(match[match.length-1]);
+                config.recentlyVisitedDirectories.push(match[match.length - 1]);
             }
         });
     } else {
@@ -142,6 +143,9 @@ function toggleManualHistory() {
 }
 
 function addRecentlyVisitedDirectory(recentlyVisitedDirectory) {
+    if (config.recentlyVisitedDirectories.length >= dynamicHistoryLimit) {
+        config.recentlyVisitedDirectories = config.recentlyVisitedDirectories.slice(1)
+    }
     config.recentlyVisitedDirectories.push(recentlyVisitedDirectory);
     saveConfig();
 }

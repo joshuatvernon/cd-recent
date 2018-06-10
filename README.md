@@ -30,6 +30,8 @@ function cd() {
 }
 ```
 
+_NOTE: Dynamic tracking currently only stores a maximum of 1000 recently visited directories_
+
 ### Retroactively Tracking
 
 Then easily set the full path to history file:
