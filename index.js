@@ -1,21 +1,24 @@
 #!/usr/bin/env node
 
-const Program = require('commander');
+const program = require('commander');
 const fse = require('fs-extra');
 const chalk = require('chalk');
+const expandTilde = require('expand-tilde');
 
 const configFilePath = __dirname + '/config.json';
 
 let config;
 let limit;
-let recentlyVisitedDirectories = [];
 
-Program
-    .version('0.1.0')
+program
+    .version('1.0.0')
     .usage('[options]')
+    .option('-a --add [full path of directory]', 'adds a recently visited directory to list')
+    .option('-d --defaultLimit [default limit]', 'sets default number of recent directories to list')
+    .option('-H --historyFile [full path to history file]', 'sets history file to parse when tracking retroactively')
     .option('-l --limit [limit]', 'sets limit of recent directories to list')
-    .option('-d --defaultLimit [default limit]', 'set default number of recent directories to list')
-    .option('-H --historyFile [path to history file]', 'full path to history file')
+    .option('-r --reset', 'reset list of recently visited directories')
+    .option('-t --toggle', 'toggle dynamic or retroactive recently visited directories tracking')
     .parse(process.argv);
 
 run();
@@ -23,14 +26,14 @@ run();
 function run() {
     loadConfig();
 
-    if (Program.historyFile) {
-        const historyFilePath = Program.historyFile;
+    if (program.historyFile) {
+        const historyFilePath = program.historyFile;
 
         setHistory(historyFilePath);
     }
 
-    if (Program.limit) {
-        limit = Number(Program.limit);
+    if (program.limit) {
+        limit = Number(program.limit);
         if (isNaN(limit)) {
             // default limit argument passed in is not a number
             console.warn('Limit must be a number but was ' + chalk.red.bold(limit));
@@ -38,8 +41,8 @@ function run() {
         }
     }
 
-    if (Program.defaultLimit) {
-        const defaultLimit = Number(Program.defaultLimit);
+    if (program.defaultLimit) {
+        const defaultLimit = Number(program.defaultLimit);
         if (isNaN(defaultLimit)) {
             // default limit argument passed in is not a number
             console.warn('Default limit must be a number but was ' + chalk.red.bold(defaultLimit));
@@ -48,9 +51,20 @@ function run() {
         saveDefaultLimit(defaultLimit);
     }
 
-    if (!Program.historyFile && !Program.defaultLimit) {
-        loadHistoryFile();
+    if (program.toggle) {
+        toggleManualHistory();
+    }
 
+    if (program.add) {
+        let recentlyVisitedDirectory = program.add;
+        addRecentlyVisitedDirectory(recentlyVisitedDirectory);
+    }
+
+    if (program.reset) {
+        resetRecentlyVisitedDirectories();
+    }
+
+    if (!program.historyFile && !program.defaultLimit && !program.toggle && !program.add && !program.reset) {
         printRecentlyVisitedDirectories();
     }
 }
@@ -67,7 +81,9 @@ function loadConfig() {
         // config file doesn't exist; save default config file
         config = {
            historyFilePath: '',
-           defaultLimit: 10
+           defaultLimit: 10,
+           dynamicTracking: false,
+           recentlyVisitedDirectories: []
        };
        saveConfig();
     }
@@ -81,7 +97,7 @@ function setHistory(historyFilePath) {
         console.log(chalk.green.bold(historyFilePath) + ' saved!');
     } else {
         // history file path does not exist
-        console.log(chalk.red.bold(historyFilePath) + ' history file does not exist');
+        console.log('No history file with ' + chalk.red.bold(historyFilePath) + ' path exists');
         process.exit();
     }
 }
@@ -94,7 +110,7 @@ function saveDefaultLimit(defaultLimit) {
 function loadHistoryFile() {
     if (config.historyFilePath === '') {
         // history file path does not exist
-        console.log(chalk.red.bold('History file is not set; try running ' + chalk.yellow.bold('cd-recent -h <history-file-path>')));
+        console.log(chalk.red.bold('History file is not set; try running ' + chalk.yellow.bold('cd-recent -H <history-file-path>')));
         process.exit();
     } else if (fse.existsSync(config.historyFilePath)) {
         // history file path exists; save history file path in config
@@ -102,24 +118,62 @@ function loadHistoryFile() {
         historyFileLines.forEach(function (line) {
             if (line.includes('cd ')) {
                 match = line.split('cd ');
-                recentlyVisitedDirectories.push(match[match.length-1]);
+                config.recentlyVisitedDirectories.push(match[match.length-1]);
             }
         });
     } else {
         // history file path does not exist
-        console.log(chalk.red.bold(config.historyFilePath) + ' history file does not exist; try running ' + chalk.yellow.bold('cd-recent -h <history-file-path>'));
+        console.log(chalk.red.bold(config.historyFilePath) + ' history file does not exist; try running ' + chalk.yellow.bold('cd-recent -h [full path to history file]'));
         process.exit();
     }
 }
 
-function printRecentlyVisitedDirectories() {
-    let currentLimit;
-    if (limit) {
-        currentLimit = limit;
+function toggleManualHistory() {
+    // toggle manual entry and save it to the config file
+    if (config.dynamicTracking) {
+        config.dynamicTracking = false;
+        console.log('Switched to ' + chalk.green.bold('retroactively') + ' tracking recently visited directories');
     } else {
-        currentLimit = config.defaultLimit;
+        config.dynamicTracking = true;
+        console.log('Switched to ' + chalk.green.bold('dynamically') + ' tracking recently visited directories');
     }
-    for (let i = recentlyVisitedDirectories.length - 1; i >= recentlyVisitedDirectories.length - currentLimit; i--) {
-        console.log(chalk.blue.bold(recentlyVisitedDirectories[i]));
+    saveConfig();
+}
+
+function addRecentlyVisitedDirectory(recentlyVisitedDirectory) {
+    config.recentlyVisitedDirectories.push(recentlyVisitedDirectory);
+    saveConfig();
+}
+
+function resetRecentlyVisitedDirectories() {
+    config.recentlyVisitedDirectories = [];
+    saveConfig();
+    console.log('Recently visited directories were successfully reset');
+}
+
+function isValidDirectoryPath(recentlyVisitedDirectory) {
+    return fse.existsSync(expandTilde(recentlyVisitedDirectory));
+}
+
+function printRecentlyVisitedDirectories() {
+    let currentLimit = limit ? limit : config.defaultLimit;
+
+    if (!config.dynamicTracking) {
+        // manual entry turned off; load history file
+        loadHistoryFile();
+    }
+
+    let start = config.recentlyVisitedDirectories.length - 1;
+    let end = config.recentlyVisitedDirectories.length - currentLimit;
+    if (config.recentlyVisitedDirectories.length > 0) {
+        for (let i = start; i >= end && i >= 0; i--) {
+            if (isValidDirectoryPath(config.recentlyVisitedDirectories[i])) {
+                console.log(chalk.green.bold(config.recentlyVisitedDirectories[i]));
+            } else {
+                console.log(config.recentlyVisitedDirectories[i]);
+            }
+        }
+    } else {
+        console.log('Couldn\'t find any recently visited directories to list');
     }
 }
