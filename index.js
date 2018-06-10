@@ -110,7 +110,8 @@ function saveDefaultLimit(defaultLimit) {
 function loadHistoryFile() {
     if (config.historyFilePath === '') {
         // history file path does not exist
-        console.log(chalk.red.bold('History file is not set; try running ' + chalk.yellow.bold('cd-recent -H <history-file-path>')));
+        console.log('Retroactive tracking is ' + chalk.green.bold('on') + '; Either run ' + chalk.yellow.bold('cd-recent -H [full path to history file]') + ' to track your history file\n');
+        console.log('Or better yet toggle dynamic tracking by running ' + chalk.yellow.bold('cd-recent -t') + ' then add the following to your ' + chalk.green.bold('.bashrc') + ' or ' + chalk.green.bold('.zshrc') + ' file:\n' + chalk.magenta.bold('function cd() {\n    builtin cd $1\n    cd-recent -a $(pwd)\n}'));
         process.exit();
     } else if (fse.existsSync(config.historyFilePath)) {
         // history file path exists; save history file path in config
