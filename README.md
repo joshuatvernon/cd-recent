@@ -1,4 +1,4 @@
-# cd-recent
+# 💿 cd-recent
 
 A tool for listing recently visited directory in a UNIX terminal
 
