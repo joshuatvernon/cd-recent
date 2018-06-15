@@ -90,4 +90,4 @@ Options:
 
 ## Contributing
 
-This project is still in its infancy, so feel free to contribute by reporting issues or suggesting some new features. Pull requests are definitely welcomed!
+Feel free to contribute by reporting issues, suggesting some new features or raising a pull request 🤘
