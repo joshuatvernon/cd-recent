@@ -12,7 +12,7 @@ let config;
 let limit;
 
 program
-    .version('1.0.0')
+    .version('1.1.2')
     .usage('[options]')
     .option('-a --add [full path of directory]', 'adds a recently visited directory to list')
     .option('-d --defaultLimit [default limit]', 'sets default number of recent directories to list')
