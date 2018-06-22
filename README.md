@@ -8,7 +8,7 @@
 
 Install `cd-recent` globally to run anytime to find out what the most recent directories you've visited are:
 ```sh
-$ npm i cd-extra -g
+$ npm i cd-recent -g
 ```
 
 ## Setup
@@ -45,7 +45,7 @@ $ cd-recent -H [full-path-to-history-file]
 
 List recently visited directories by running (valid directories will be displayed __green__):
 ```sh
-$ cd-extra
+$ cd-recent
 ```
 
 List a specific number of recently visited directories by running:
