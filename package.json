@@ -9,8 +9,12 @@
     "author": "Joshua Thomas Vernon",
     "license": "MIT",
     "keywords": [
+        "cd-recent",
         "cd",
-        "recent"
+        "recent",
+        "unix",
+        "unix-command",
+        "terminal"
     ],
     "dependencies": {
         "chalk": "^2.4.1",
